@@ -2,6 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-xorm/xorm"
 	"html/template"
 	"log"
 	"net/http"
@@ -39,6 +42,24 @@ func userLogin(writer http.ResponseWriter, request *http.Request) {
 		Resp(writer, 1, nil, "密码不正确")
 	}
 
+}
+
+var DbEngin *xorm.Engine
+
+func init() {
+	drivename := "mysql"
+	DsName := "root:root@(127.0.0.1:3306)/chat?chartset=utf8"
+	DbEngin, err := xorm.NewEngine(drivename, DsName)
+	if nil != err {
+		log.Fatal(err.Error())
+	}
+	//是否显示sql语句
+	DbEngin.ShowSQL(true)
+	//数据库最大打开的连接数
+	DbEngin.SetMaxOpenConns(2)
+	//自动User
+	//DbEngin.Sync2(new(User))
+	fmt.Println("init data base ok")
 }
 
 type H struct {
