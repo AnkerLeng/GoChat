@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"html/template"
 	"log"
 	"net/http"
 )
@@ -77,7 +78,18 @@ func main() {
 	// 1.提供静态资源目录支持
 	//http.Handle("/",http.FileServer(http.Dir(".")))
 	// 提供指定目录静态资源服务
-	http.Handle("/asset/",http.FileServer(http.Dir(".")))
+	http.Handle("/asset/", http.FileServer(http.Dir(".")))
+	//user.login.shtml
+	http.HandleFunc("/user/login.shtml", func(writer http.ResponseWriter, request *http.Request) {
+		//解析
+		tpl, err := template.ParseFiles("hello/view/user/login.html")
+		if nil != err {
+			log.Fatal(err.Error())
+
+		}
+		_ = tpl.ExecuteTemplate(writer, "/user/login.shtml", nil)
+
+	})
 	// 启动web服务器
 	_ = http.ListenAndServe(":8080", nil)
 }
