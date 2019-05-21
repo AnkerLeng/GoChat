@@ -1,144 +1,63 @@
 package main
 
 import (
-	"GoChat/hello/model"
-	"GoChat/hello/service"
-	"GoChat/hello/util"
-	"encoding/json"
+	"GoChat/hello/ctrl"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/go-xorm/xorm"
 	"html/template"
 	"log"
-	"math/rand"
 	"net/http"
 )
-var userService service.UserService
-func userRegister(writer http.ResponseWriter,
-	request *http.Request) {
 
-	request.ParseForm()
-	//
-	mobile := request.PostForm.Get("mobile")
-	//
-	plainpwd := request.PostForm.Get("passwd")
-	nickname := fmt.Sprintf("user%06d",rand.Int31())
-	avatar :=""
-	sex := model.SEX_UNKNOW
-
-	user,err := userService.Register(mobile, plainpwd,nickname,avatar,sex)
-	if err!=nil{
-		util.RespFail(writer,err.Error())
-	}else{
-		util.RespOk(writer,user,"")
-
-	}
-
-}
-
-// 将函数抽离出来
-func userLogin(writer http.ResponseWriter, request *http.Request) {
-	//数据库操作
-	//逻辑处理
-	//rest api json/xml 返回
-
-	// 1. 获取前端传递的参数
-	// mobile, password
-	// 解析参数
-	// 如何获得参数
-	// 解析参数
-
-	_ = request.ParseForm()
-
-	mobile := request.PostForm.Get("mobile")
-	password := request.PostForm.Get("password")
-	loginok := false
-	if (mobile == "168000000000" && password == "123456") {
-		loginok = true
-	}
-	//使用application/x-www-form-urlencoded POST数据
-	//curl http://localhost:8080/user/login -X POST -d "mobile=186000000000&password=123456"
-	if (loginok) {
-		// {"id":1,"token":"xxx"}
-		data := make(map[string]interface{})
-		data["id"] = 1
-		data["token"] = "test"
-		Resp(writer, 0, data, "")
-	} else {
-		Resp(writer, 1, nil, "密码不正确")
-	}
-
-}
-
-var DbEngin *xorm.Engine
-
-func init() {
-	drivename := "mysql"
-	DsName := "root:root@(127.0.0.1:3306)/chat?chartset=utf8"
-	DbEngin, err := xorm.NewEngine(drivename, DsName)
-	if nil != err {
-		log.Fatal(err.Error())
-	}
-	//是否显示sql语句
-	DbEngin.ShowSQL(true)
-	//数据库最大打开的连接数
-	DbEngin.SetMaxOpenConns(2)
-	//自动User
-	//DbEngin.Sync2(new(User))
-	fmt.Println("init data base ok")
-}
-
-type H struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data,omitempty"` // data 为null不显示 omitempty
-}
-
-func Resp(w http.ResponseWriter, code int, data interface{}, msg string) {
-	//设置header为json 默认的text/html 所以特别指出返回的格式为
-	//为application/json
-	w.Header().Set("Content-Type", "application/json")
-	//返回json ok
-
-	//设置200状态
-	w.WriteHeader(http.StatusOK)
-	//输出
-	//定义一个结构体
-	h := H{
-		Code: code,
-		Msg:  msg,
-		Data: data,
-	}
-	//将结构体转化为json字符串
-	ret, err := json.Marshal(h)
+func RegisterTemplate() {
+	//全局扫描模板
+	GlobTemplete := template.New("root")
+	GlobTemplete, err := GlobTemplete.ParseGlob("hello/view/**/*")
 	if err != nil {
-		log.Println(err.Error())
+		//打印错误信息
+		//退出系统
+		log.Fatal(err)
 	}
-	//输出
-	_, _ = w.Write(ret)
+	//分别对每一个模板进行注册
+
+	for _, tpl := range GlobTemplete.Templates() {
+		patern := tpl.Name()
+		http.HandleFunc(patern,
+			func(w http.ResponseWriter,
+				r *http.Request) {
+				GlobTemplete.ExecuteTemplate(w, patern, nil)
+			})
+		fmt.Println("register=>" + patern)
+	}
 }
-
 func RegisterView() {
+	//一次解析出全部模板
 	tpl, err := template.ParseGlob("hello/view/**/*")
-	//如果报错就不要继续了
 	if nil != err {
-		log.Fatal(err.Error())
-
+		log.Fatal(err)
 	}
+	//通过for循环做好映射
 	for _, v := range tpl.Templates() {
-		tplname := v.Name()
-		http.HandleFunc(tplname, func(writer http.ResponseWriter, request *http.Request) {
-			_ = tpl.ExecuteTemplate(writer, tplname, nil)
+		//
+		tplname := v.Name();
+		fmt.Println("HandleFunc     " + v.Name())
+		http.HandleFunc(tplname, func(w http.ResponseWriter,
+			request *http.Request) {
+			//
+			fmt.Println("parse     " + v.Name() + "==" + tplname)
+			err := tpl.ExecuteTemplate(w, tplname, nil)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
 		})
 	}
 
 }
-
 func main() {
 
 	//绑定请求和处理函数
-	http.HandleFunc("/user/login", userLogin)
-	http.HandleFunc("/user/register", userRegister)
+	http.HandleFunc("/user/login", ctrl.UserLogin)
+	http.HandleFunc("/user/register", ctrl.UserRegister)
 
 	RegisterView()
 	// 启动web服务器
