@@ -54,10 +54,15 @@ func RegisterView() {
 
 }
 func main() {
-
 	//绑定请求和处理函数
 	http.HandleFunc("/user/login", ctrl.UserLogin)
 	http.HandleFunc("/user/register", ctrl.UserRegister)
+
+	//1 提供静态资源目录支持
+	//http.Handle("/", http.FileServer(http.Dir(".")))
+
+	//2 指定目录的静态文件
+	http.Handle("/asset/", http.FileServer(http.Dir(".")))
 
 	RegisterView()
 	// 启动web服务器
