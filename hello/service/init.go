@@ -1,7 +1,7 @@
 package service
 
 import (
-	"../model"
+	"GoChat/hello/model"
 	"errors"
 	"fmt"
 	"github.com/go-xorm/xorm"

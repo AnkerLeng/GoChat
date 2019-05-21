@@ -1,14 +1,40 @@
 package main
 
 import (
+	"GoChat/hello/model"
+	"GoChat/hello/service"
+	"GoChat/hello/util"
 	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 	"html/template"
 	"log"
+	"math/rand"
 	"net/http"
 )
+var userService service.UserService
+func userRegister(writer http.ResponseWriter,
+	request *http.Request) {
+
+	request.ParseForm()
+	//
+	mobile := request.PostForm.Get("mobile")
+	//
+	plainpwd := request.PostForm.Get("passwd")
+	nickname := fmt.Sprintf("user%06d",rand.Int31())
+	avatar :=""
+	sex := model.SEX_UNKNOW
+
+	user,err := userService.Register(mobile, plainpwd,nickname,avatar,sex)
+	if err!=nil{
+		util.RespFail(writer,err.Error())
+	}else{
+		util.RespOk(writer,user,"")
+
+	}
+
+}
 
 // 将函数抽离出来
 func userLogin(writer http.ResponseWriter, request *http.Request) {
@@ -110,28 +136,10 @@ func RegisterView() {
 
 func main() {
 
-	/*
+	//绑定请求和处理函数
+	http.HandleFunc("/user/login", userLogin)
+	http.HandleFunc("/user/register", userRegister)
 
-		// 绑定请求和处理函数
-		http.HandleFunc("/user/login", userLogin)
-
-		// 1.提供静态资源目录支持
-		//http.Handle("/",http.FileServer(http.Dir(".")))
-		// 提供指定目录静态资源服务
-		http.Handle("/asset/", http.FileServer(http.Dir(".")))
-		//user.login.shtml
-		http.HandleFunc("/user/login.shtml", func(writer http.ResponseWriter, request *http.Request) {
-			//解析
-			tpl, err := template.ParseFiles("hello/view/user/login.html")
-			if nil != err {
-				log.Fatal(err.Error())
-
-			}
-			_ = tpl.ExecuteTemplate(writer, "/user/login.shtml", nil)
-
-		})
-
-	*/
 	RegisterView()
 	// 启动web服务器
 	_ = http.ListenAndServe(":8080", nil)

@@ -1,8 +1,8 @@
 package service
 
 import (
-	"../model"
-	"../util"
+	"GoChat/hello/model"
+	"GoChat/hello/util"
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
