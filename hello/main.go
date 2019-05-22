@@ -1,12 +1,12 @@
 package main
 
 import (
-	"GoChat/hello/ctrl"
+	"net/http"
+	"./ctrl"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"log"
-	"net/http"
 )
 
 func RegisterTemplate() {
@@ -53,11 +53,16 @@ func RegisterView() {
 	}
 
 }
+
 func main() {
 	//绑定请求和处理函数
 	http.HandleFunc("/user/login", ctrl.UserLogin)
 	http.HandleFunc("/user/register", ctrl.UserRegister)
-
+	http.HandleFunc("/contact/loadcommunity", ctrl.LoadCommunity)
+	http.HandleFunc("/contact/loadfriend", ctrl.LoadFriend)
+	http.HandleFunc("/contact/joincommunity", ctrl.JoinCommunity)
+	//http.HandleFunc("/contact/addfriend", ctrl.Addfriend)
+	http.HandleFunc("/contact/addfriend", ctrl.Addfriend)
 	//1 提供静态资源目录支持
 	//http.Handle("/", http.FileServer(http.Dir(".")))
 
@@ -65,6 +70,6 @@ func main() {
 	http.Handle("/asset/", http.FileServer(http.Dir(".")))
 
 	RegisterView()
-	// 启动web服务器
-	_ = http.ListenAndServe(":8080", nil)
+
+	http.ListenAndServe(":8080", nil)
 }
