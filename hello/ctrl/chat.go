@@ -1,6 +1,7 @@
 package ctrl
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"gopkg.in/fatih/set.v0"
@@ -14,14 +15,11 @@ const (
 	CMD_SINGLE_MSG = 10
 	CMD_ROOM_MSG   = 11
 	CMD_HEART      = 0
-	CMD_ACK        = 1
-	CMD_ENTRY_ROOM = 2
-	CMD_EXIT_ROOM  = 3
 )
 
 type Message struct {
 	Id      int64  `json:"id,omitempty" form:"id"`           //消息ID
-	Userid  int64  `json:"userid,omitempty" form:"userid"`   //谁发的
+	Userid  string  `json:"userid,omitempty" form:"userid"`   //谁发的
 	Cmd     int    `json:"cmd,omitempty" form:"cmd"`         //群聊还是私聊
 	Dstid   int64  `json:"dstid,omitempty" form:"dstid"`     //对端用户ID/群ID
 	Media   int    `json:"media,omitempty" form:"media"`     //消息按照什么样式展示
@@ -137,13 +135,30 @@ func recvproc(node *Node) {
 			return
 		}
 		//todo 对data进一步处理
+		dispatch(data)
 		fmt.Printf("recv<=%s", data)
 	}
 }
 
-//todo 参数处理
+//后端调度逻辑处理
 func dispatch(data []byte) {
-
+	//todo 解析data为message
+	msg := Message{}
+	fmt.Println(string(data))
+	err := json.Unmarshal(data, &msg)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	//todo 根据cmd对逻辑进行处理
+	switch msg.Cmd {
+	case CMD_SINGLE_MSG:
+		sendMsg(msg.Dstid, data)
+	case CMD_ROOM_MSG:
+		//todo 群聊转发逻辑
+	case CMD_HEART:
+		//todo 一般啥都不做
+	}
 }
 
 //todo 发送消息
