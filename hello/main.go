@@ -62,13 +62,15 @@ func main() {
 	http.HandleFunc("/contact/loadfriend", ctrl.LoadFriend)
 	http.HandleFunc("/contact/joincommunity", ctrl.JoinCommunity)
 	http.HandleFunc("/contact/addfriend", ctrl.Addfriend)
+	http.HandleFunc("/chat", ctrl.Chat)
+	http.HandleFunc("/attach/upload", ctrl.Upload)
 	//1 提供静态资源目录支持
 	//http.Handle("/", http.FileServer(http.Dir(".")))
 
 	//2 指定目录的静态文件
-	http.Handle("/asset/", http.FileServer(http.Dir(".")))
-	http.HandleFunc("/chat", ctrl.Chat)
+	http.Handle("/hello/asset/", http.FileServer(http.Dir(".")))
+	http.Handle("/mnt/",http.FileServer(http.Dir(".")))
 	RegisterView()
 
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe("0.0.0.0:8080", nil)
 }
